@@ -1,5 +1,4 @@
 import numpy as np
-import joblib
 
 def generate_sensor_data(num_samples=1000):
     AccX = np.random.uniform(-10, 10, num_samples)

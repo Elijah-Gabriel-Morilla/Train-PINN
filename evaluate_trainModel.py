@@ -1,8 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, accuracy_score
 
 class PINN(nn.Module):
     def __init__(self, input_size):
@@ -10,13 +9,13 @@ class PINN(nn.Module):
         self.fc1 = nn.Linear(input_size, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 3)
+        self.fc4 = nn.Linear(32, 1)  # Adjusted output to 1 for binary classification
         
     def forward(self, x):
         h = torch.relu(self.fc1(x))
         h = torch.relu(self.fc2(h))
         h = torch.relu(self.fc3(h))
-        return self.fc4(h)
+        return torch.sigmoid(self.fc4(h))  # Sigmoid for binary classification
 
 def load_model(model_path, input_size):
     model = PINN(input_size)
@@ -35,37 +34,23 @@ def evaluate_model(model, X, y):
     print(f"Mean Squared Error: {mse:.4f}")
     print(f"R-squared Score: {r2:.4f}")
     
-    # Calculate accuracy and accident-prone percentage
-    tolerance = 0.1  # Example tolerance for accident-prone detection
+    # Compute accuracy and accident-prone percentage
+    threshold = 0.5  # Adjust threshold as needed
+    y_pred_binary = (predictions > threshold).astype(int)
+    accuracy = accuracy_score(y, y_pred_binary)
+    accident_prone_percentage = 100 - accuracy * 100
     
-    acc_count = np.sum(np.abs(predictions[:, 0] - y[:, 0]) <= tolerance)
-    total_samples = len(y)
-    accuracy = acc_count / total_samples * 100
+    print(f"Accuracy: {accuracy:.2%}")
+    print(f"Accident-Prone Percentage: {accident_prone_percentage:.2%}")
     
-    accident_prone_count = np.sum(np.abs(predictions[:, 0] - y[:, 0]) > tolerance)
-    accident_prone_percentage = accident_prone_count / total_samples * 100
-    
-    print(f"Accuracy: {accuracy:.2f}%")
-    print(f"Accident-Prone Percentage: {accident_prone_percentage:.2f}%")
-    
-    return predictions
-
-def plot_results(y_true, y_pred):
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y_true, y_pred, alpha=0.5)
-    plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
-    plt.xlabel("Actual Values")
-    plt.ylabel("Predicted Values")
-    plt.title("Actual vs Predicted")
-    plt.tight_layout()
-    plt.show()
+    return predictions, y_pred_binary
 
 if __name__ == "__main__":
-    X_test = np.load('X_train_sensor.npy')  # Use same data for simplicity
-    y_test = np.load('y_train_sensor.npy')
+    # Load and prepare your test data (X_test, y_test)
+    # Example:
+    X_test = np.load('X_test_sensor.npy')  # Adjust path as necessary
+    y_test = np.load('y_test_sensor.npy')
     
     model = load_model('pinn_model.pth', X_test.shape[1])
     
-    predictions = evaluate_model(model, X_test, y_test)
-    
-    plot_results(y_test[:, 0], predictions[:, 0])  # Example plot for the first output
+    predictions, y_pred_binary = evaluate_model(model, X_test, y_test)

@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.metrics import accuracy_score
 
 class PINN(nn.Module):
     def __init__(self, input_size):
@@ -10,24 +11,24 @@ class PINN(nn.Module):
         self.fc1 = nn.Linear(input_size, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 3)
+        self.fc4 = nn.Linear(32, 1)  # Adjusted output to 1 for binary classification
         
     def forward(self, x):
         h = torch.relu(self.fc1(x))
         h = torch.relu(self.fc2(h))
         h = torch.relu(self.fc3(h))
-        return self.fc4(h)
+        return torch.sigmoid(self.fc4(h))  # Sigmoid for binary classification
 
 def train_model(X_train, y_train, input_size, num_epochs=100, batch_size=32, learning_rate=0.001):
     X_train_tensor = torch.FloatTensor(X_train)
-    y_train_tensor = torch.FloatTensor(y_train)
+    y_train_tensor = torch.FloatTensor(y_train.reshape(-1, 1))  # Reshape for compatibility
     
     train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
     model = PINN(input_size)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    criterion = nn.MSELoss()
+    criterion = nn.BCELoss()  # Binary Cross Entropy Loss for binary classification
     
     for epoch in range(num_epochs):
         model.train()
@@ -45,6 +46,8 @@ def train_model(X_train, y_train, input_size, num_epochs=100, batch_size=32, lea
     torch.save(model.state_dict(), 'pinn_model.pth')
 
 if __name__ == "__main__":
+    # Load and prepare your training data (X_train, y_train)
+    # Example:
     X_train = np.load('X_train_sensor.npy')
     y_train = np.load('y_train_sensor.npy')
     
