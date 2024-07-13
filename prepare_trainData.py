@@ -14,7 +14,7 @@ def generate_sensor_data(num_samples=1000):
     Yaw_new = np.zeros(num_samples)
     for i in range(1, num_samples):
         Yaw_new[i] = Yaw_new[i-1] + (GyroZ[i] * 1)
-    
+
     sensor_data = np.stack((AccX, AccY, AccZ, GyroX, GyroY, GyroZ, AngX, AngY, Yaw_new), axis=-1)
     return sensor_data
 
@@ -25,6 +25,9 @@ def prepare_data():
     
     X = sensor_data[:, :6]
     y = sensor_data[:, 6:]
+    
+    print(f"Shape of X: {X.shape}")
+    print(f"Shape of y: {y.shape}")
     
     X_scaled = X
     

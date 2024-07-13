@@ -9,13 +9,13 @@ class PINN(nn.Module):
         self.fc1 = nn.Linear(input_size, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 1)  # Adjusted output to 1 for binary classification
+        self.fc4 = nn.Linear(32, 1)
         
     def forward(self, x):
         h = torch.relu(self.fc1(x))
         h = torch.relu(self.fc2(h))
         h = torch.relu(self.fc3(h))
-        return torch.sigmoid(self.fc4(h))  # Sigmoid for binary classification
+        return torch.sigmoid(self.fc4(h))
 
 def load_model(model_path, input_size):
     model = PINN(input_size)
@@ -34,8 +34,7 @@ def evaluate_model(model, X, y):
     print(f"Mean Squared Error: {mse:.4f}")
     print(f"R-squared Score: {r2:.4f}")
     
-    # Compute accuracy and accident-prone percentage
-    threshold = 0.5  # Adjust threshold as needed
+    threshold = 0.5
     y_pred_binary = (predictions > threshold).astype(int)
     accuracy = accuracy_score(y, y_pred_binary)
     accident_prone_percentage = 100 - accuracy * 100
@@ -46,9 +45,7 @@ def evaluate_model(model, X, y):
     return predictions, y_pred_binary
 
 if __name__ == "__main__":
-    # Load and prepare your test data (X_test, y_test)
-    # Example:
-    X_test = np.load('X_test_sensor.npy')  # Adjust path as necessary
+    X_test = np.load('X_test_sensor.npy')
     y_test = np.load('y_test_sensor.npy')
     
     model = load_model('pinn_model.pth', X_test.shape[1])
