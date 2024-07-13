@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
-import joblib
 
 class PINN(nn.Module):
     def __init__(self, input_size):
@@ -35,6 +34,19 @@ def evaluate_model(model, X, y):
     
     print(f"Mean Squared Error: {mse:.4f}")
     print(f"R-squared Score: {r2:.4f}")
+    
+    # Calculate accuracy and accident-prone percentage
+    tolerance = 0.1  # Example tolerance for accident-prone detection
+    
+    acc_count = np.sum(np.abs(predictions[:, 0] - y[:, 0]) <= tolerance)
+    total_samples = len(y)
+    accuracy = acc_count / total_samples * 100
+    
+    accident_prone_count = np.sum(np.abs(predictions[:, 0] - y[:, 0]) > tolerance)
+    accident_prone_percentage = accident_prone_count / total_samples * 100
+    
+    print(f"Accuracy: {accuracy:.2f}%")
+    print(f"Accident-Prone Percentage: {accident_prone_percentage:.2f}%")
     
     return predictions
 
